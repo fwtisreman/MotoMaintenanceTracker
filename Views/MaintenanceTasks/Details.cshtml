@@ -1,52 +1,99 @@
 @model MotoMaintenanceTracker.Models.MaintenanceTask
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Task Details";
 }
 
-<h1>Details</h1>
+<h1>Maintenance Task Details</h1>
+
+@{
+    var reminder = ViewData["MaintenanceReminder"]
+            as MotoMaintenanceTracker.Models.Message;
+}
+
+@if (reminder != null)
+{
+    <div class="alert @(reminder.IsDismissed? "alert-secondary" : "alert-warning") mt-3">
+        <h5> @reminder.Title</h5>
+        <p class="mb-2">@reminder.Content</p>
+
+        @if(!reminder.IsDismissed)
+        {
+            <form asp-controller="Messages"
+            asp-action="Dismiss"
+            method="post">
+        <input type="hidden" name="id" value="@reminder.Id" />
+        <input type="=hidden" name="returnUrl"
+            value="@Url.Action("Detais","MaintenanceTasks",new{id = Model.Id})"/>
+         <button type="submit" class="btn btn-warning btn-sm">
+                    Dismiss reminder
+                </button>
+            </form>
+        }
+        else
+        {
+            <span class="badge bg-secondary">Dismissed</span>
+        }
+    </div>
+
+}
 
 <div>
-    <h4>MaintenanceTask</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
+            Motorcycle
+        </dt>
+        <dd class="col-sm-10">
+            @(Model.Motorcycle != null
+                ? $"{Model.Motorcycle.Brand} {Model.Motorcycle.Model}"
+                : "No motorcycle assigned")
+        </dd>
+
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Title)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Title)
         </dd>
-    </dl>
-        <dt class = "col-sm-2">
+
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Description)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
+        <dd class="col-sm-10">
+            @(string.IsNullOrWhiteSpace(Model.Description)
+                ? "—"
+                : Model.Description)
         </dd>
-    </dl>
-        <dt class = "col-sm-2">
+
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.DueDate)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DueDate)
+        <dd class="col-sm-10">
+            @(Model.DueDate.HasValue
+                ? Model.DueDate.Value.ToShortDateString()
+                : "Not scheduled")
         </dd>
-    </dl>
-        <dt class = "col-sm-2">
+
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.DueMileage)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DueMileage)
+        <dd class="col-sm-10">
+            @(Model.DueMileage.HasValue
+                ? Model.DueMileage.Value.ToString("N0") + " km"
+                : "Not specified")
         </dd>
-    </dl>
-        <dt class = "col-sm-2">
+
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.IsCompleted)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsCompleted)
+        <dd class="col-sm-10">
+            @(Model.IsCompleted ? "Completed" : "Pending")
         </dd>
     </dl>
 </div>
+
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

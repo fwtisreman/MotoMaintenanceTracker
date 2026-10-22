@@ -16,7 +16,11 @@ public class MotorcyclesController : Controller
     // GET: MOTORCYCLES
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.Motorcycles.ToListAsync());
+        var motorcycles = await _context.Motorcycles
+            .Where(m => !m.IsDeleted)
+            .ToListAsync();
+
+        return View(motorcycles);
     }
 
     // GET: MOTORCYCLES/Details/5
@@ -129,19 +133,37 @@ public class MotorcyclesController : Controller
     }
 
     // POST: MOTORCYCLES/Delete/5
+
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
     {
-        var motorcycle = await _context.Motorcycles.FindAsync(id);
-        if (motorcycle != null)
+        if (id == null)
         {
-            _context.Motorcycles.Remove(motorcycle);
+            return NotFound();
         }
 
+        var motorcycle = await _context.Motorcycles
+            .FirstOrDefaultAsync(m => m.Id == id && !m.IsDeleted);
+
+        if (motorcycle == null)
+        {
+            return NotFound();
+        }
+
+        var maintenanceTasks = await _context.MaintenanceTasks
+            .Where(t => t.MotorcycleId == motorcycle.Id)
+            .ToListAsync();
+
+        _context.MaintenanceTasks.RemoveRange(maintenanceTasks);
+
+        motorcycle.IsDeleted = true;
+
         await _context.SaveChangesAsync();
+
         return RedirectToAction(nameof(Index));
     }
+
 
     private bool MotorcycleExists(int? id)
     {

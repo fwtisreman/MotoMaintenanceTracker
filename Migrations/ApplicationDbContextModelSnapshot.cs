@@ -37,10 +37,22 @@ namespace MotoMaintenanceTracker.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("DueDateReminderSent")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("DueMileage")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MotorcycleId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("OneDayReminderSent")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SevenDayReminderSent")
                         .HasColumnType("bit");
 
                     b.Property<string>("Title")
@@ -50,7 +62,51 @@ namespace MotoMaintenanceTracker.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("MotorcycleId");
+
                     b.ToTable("MaintenanceTasks");
+                });
+
+            modelBuilder.Entity("MotoMaintenanceTracker.Models.Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDismissed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MaintenanceTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaintenanceTaskId");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("MotoMaintenanceTracker.Models.Motorcycle", b =>
@@ -65,6 +121,9 @@ namespace MotoMaintenanceTracker.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Mileage")
                         .HasColumnType("int");
@@ -117,6 +176,24 @@ namespace MotoMaintenanceTracker.Migrations
                     b.HasIndex("MotorcycleId");
 
                     b.ToTable("ServiceRecords");
+                });
+
+            modelBuilder.Entity("MotoMaintenanceTracker.Models.MaintenanceTask", b =>
+                {
+                    b.HasOne("MotoMaintenanceTracker.Models.Motorcycle", "Motorcycle")
+                        .WithMany()
+                        .HasForeignKey("MotorcycleId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Motorcycle");
+                });
+
+            modelBuilder.Entity("MotoMaintenanceTracker.Models.Message", b =>
+                {
+                    b.HasOne("MotoMaintenanceTracker.Models.MaintenanceTask", null)
+                        .WithMany()
+                        .HasForeignKey("MaintenanceTaskId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("MotoMaintenanceTracker.Models.ServiceRecord", b =>

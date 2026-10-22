@@ -15,6 +15,7 @@
 <table class="table">
     <thead>
         <tr>
+            <th>Motorcycle</th>
             <th>Title</th>
             <th>Description</th>
             <th>Due Date</th>
@@ -27,6 +28,11 @@
         @foreach (var item in Model)
         {
             <tr>
+                <td>
+                    @(item.Motorcycle != null
+                        ? $"{item.Motorcycle.Brand} {item.Motorcycle.Model}"
+                        : "No motorcycle assigned")
+                </td>
                 <td>@item.Title</td>
                 <td>
                     @(string.IsNullOrWhiteSpace(item.Description)

@@ -46,9 +46,10 @@ public class ServiceRecordsController : Controller
     public IActionResult Create()
     {
         ViewData["MotorcycleId"] = new SelectList(
-        _context.Motorcycles,
-        "Id",
-        "Model");
+           _context.Motorcycles.Where(m => !m.IsDeleted),
+           "Id",
+           "Model"
+                  );
 
         return View();
     }
@@ -64,16 +65,30 @@ public class ServiceRecordsController : Controller
     {
         if (ModelState.IsValid)
         {
-            _context.Add(servicerecord);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            var motorcycle = await _context.Motorcycles
+                .FirstOrDefaultAsync(m =>
+                    m.Id == servicerecord.MotorcycleId &&
+                    !m.IsDeleted);
+
+            if (motorcycle == null)
+            {
+                ModelState.AddModelError(
+                    nameof(servicerecord.MotorcycleId),
+                    "Please select a valid motorcycle.");
+            }
+            else
+            {
+                _context.ServiceRecords.Add(servicerecord);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         ViewData["MotorcycleId"] = new SelectList(
-            _context.Motorcycles,
-            "Id",
-            "Model",
-            servicerecord.MotorcycleId);
+           _context.Motorcycles.Where(m => !m.IsDeleted),
+           "Id",
+           "Model",
+           servicerecord.MotorcycleId);
 
         return View(servicerecord);
     }
@@ -95,10 +110,10 @@ public class ServiceRecordsController : Controller
         }
 
         ViewData["MotorcycleId"] = new SelectList(
-            _context.Motorcycles,
-            "Id",
-            "Model",
-            servicerecord.MotorcycleId);
+           _context.Motorcycles.Where(m => !m.IsDeleted),
+           "Id",
+           "Model",
+           servicerecord.MotorcycleId);
 
         return View(servicerecord);
     }
@@ -118,24 +133,41 @@ public class ServiceRecordsController : Controller
 
         if (ModelState.IsValid)
         {
-            try
+            var motorcycle = await _context.Motorcycles
+                .FirstOrDefaultAsync(m => m.Id == servicerecord.MotorcycleId);
+
+            if (motorcycle == null)
             {
-                _context.Update(servicerecord);
-                await _context.SaveChangesAsync();
+                ModelState.AddModelError(
+                    nameof(servicerecord.MotorcycleId),
+                    "Please select a valid motorcycle");
             }
-            catch (DbUpdateConcurrencyException)
+            
+            else
             {
-                if (!ServiceRecordExists(servicerecord.Id))
+                try
                 {
-                    return NotFound();
+                    _context.Update(servicerecord);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
-                else
+                catch(DbUpdateConcurrencyException)
                 {
+                    if(!ServiceRecordExists(servicerecord.Id))
+                    {
+                        return NotFound();
+                    }
                     throw;
                 }
             }
-            return RedirectToAction(nameof(Index));
         }
+
+        ViewData["MotorcycleId"] = new SelectList(
+           _context.Motorcycles.Where(m => !m.IsDeleted),
+           "Id",
+           "Model",
+           servicerecord.MotorcycleId);
+
         return View(servicerecord);
     }
 

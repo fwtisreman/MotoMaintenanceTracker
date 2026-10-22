@@ -8,6 +8,12 @@ namespace MotoMaintenanceTracker.Models
     {
         public int Id { get; set; }
 
+
+        
+        public int? MotorcycleId { get; set; }
+
+        public Motorcycle? Motorcycle { get; set; } 
+
         [Required]
         [StringLength(100)]
         public string Title { get; set; } = string.Empty;
@@ -22,6 +28,9 @@ namespace MotoMaintenanceTracker.Models
         public int? DueMileage { get; set; }
 
         public bool IsCompleted { get; set; }
+        public bool SevenDayReminderSent { get; set; }
+        public bool OneDayReminderSent { get; set; }
+        public bool DueDateReminderSent { get; set; }
     }
 }
 

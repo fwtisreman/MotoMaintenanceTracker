@@ -14,6 +14,14 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
+                <label asp-for="MotorcycleId" class="control-label">Motorcycle</label>
+                <select asp-for="MotorcycleId" asp-items="ViewBag.MotorcycleId" class="form-control">
+                    <option value="">-- Select Motorcycle --</option>
+                </select>
+                <span asp-validation-for="MotorcycleId" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
                 <input asp-for="Title" class="form-control" />
                 <span asp-validation-for="Title" class="text-danger"></span>

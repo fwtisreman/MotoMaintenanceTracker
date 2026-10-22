@@ -7,6 +7,8 @@ namespace MotoMaintenanceTracker.Models
     {
         public int Id { get; set; }
 
+        public bool IsDeleted { get; set; } = false;
+
         [Required]
         [StringLength(50)]
         public string Brand { get; set; } = string.Empty;
@@ -15,7 +17,7 @@ namespace MotoMaintenanceTracker.Models
         [StringLength(50)]
         public string Model { get; set; } = string.Empty;
         [Required]
-        [Range(1900,2100)]
+        [Range(1900,2027)]
         public int Year { get; set; }
         [Required]
         [Range(0,1000000)]

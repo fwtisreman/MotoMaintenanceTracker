@@ -14,6 +14,14 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
+                <label asp-for="MotorcycleId" class="control-label">Motorcycle</label>
+                <select asp-for="MotorcycleId" asp-items="ViewBag.MotorcycleId" class="form-control">
+                    <option value="">-- Select Motorcycle --</option>
+                </select>
+                <span asp-validation-for="MotorcycleId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
                 <input asp-for="Title" class="form-control" />
                 <span asp-validation-for="Title" class="text-danger"></span>
@@ -27,15 +35,26 @@
 
             <div class="form-group">
                 <label asp-for="DueDate" class="control-label"></label>
-                <input asp-for="DueDate" class="form-control" />
+                <<input asp-for="DueDate"
+                            type="date"
+                            min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                            class="form-control" />
                 <span asp-validation-for="DueDate" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="DueMileage" class="control-label"></label>
-                <input asp-for="DueMileage" class="form-control" />
-                <span asp-validation-for="DueMileage" class="text-danger"></span>
-            </div>
+                <div class="form-group">
+                    <label asp-for="DueMileage" class="control-label"></label>
+                    <input asp-for="DueMileage"
+                           type="number"
+                           id="DueMileage"
+                           class="form-control" />
+
+                    <small id="currentMileageInfo" class="text-muted">
+                        Select a motorcycle to see its current mileage.
+                    </small>
+
+                    <span asp-validation-for="DueMileage" class="text-danger"></span>
+                </div>
 
             <div class="form-group">
                 <label asp-for="IsCompleted" class="control-label"></label>
@@ -52,3 +71,35 @@
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
+
+    <script>
+        const motorcycleMileages =
+            @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                    ViewData["MotorcycleMileages"]));
+
+        const motorcycleSelect = document.getElementById("MotorcycleId");
+        const dueMileageInput = document.getElementById("DueMileage");
+        const mileageInfo = document.getElementById("currentMileageInfo");
+
+        function updateMileageInfo() {
+            const selectedId = motorcycleSelect.value;
+
+            if (selectedId && motorcycleMileages[selectedId] !== undefined) {
+                const currentMileage = motorcycleMileages[selectedId];
+
+                mileageInfo.textContent =
+                    `Current mileage: ${currentMileage.toLocaleString()} km. Due mileage must be at least ${currentMileage.toLocaleString()} km.`;
+
+                dueMileageInput.min = currentMileage;
+            } else {
+                mileageInfo.textContent =
+                    "Select a motorcycle to see its current mileage.";
+
+                dueMileageInput.removeAttribute("min");
+            }
+        }
+
+        motorcycleSelect.addEventListener("change", updateMileageInfo);
+
+        updateMileageInfo();
+    </script>

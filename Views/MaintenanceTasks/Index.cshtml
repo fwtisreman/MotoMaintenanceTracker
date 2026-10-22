@@ -1,0 +1,64 @@
+@model IEnumerable<MotoMaintenanceTracker.Models.MaintenanceTask>
+
+@{
+    ViewData["Title"] = "Maintenance Tasks";
+}
+
+<h1>Maintenance Tasks</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">
+        Add Maintenance Task
+    </a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Due Date</th>
+            <th>Due Mileage</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>
+                    @(string.IsNullOrWhiteSpace(item.Description)
+                        ? "—"
+                        : item.Description)
+                </td>
+                <td>
+                    @(item.DueDate.HasValue
+                        ? item.DueDate.Value.ToShortDateString()
+                        : "Not scheduled")
+                </td>
+                <td>
+                    @(item.DueMileage.HasValue
+                        ? item.DueMileage.Value.ToString("N0") + " km"
+                        : "Not specified")
+                </td>
+                <td>
+                    @if (item.IsCompleted)
+                    {
+                        <span class="badge bg-success">Completed</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

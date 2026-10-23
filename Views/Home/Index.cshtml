@@ -1,8 +1,101 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="home-hero">
+    <div class="hero-content">
+        <span class="hero-eyebrow">MOTOMAINTENANCE TRACKER / GARAGE CONTROL</span>
+
+        <h1>
+            YOUR GARAGE.<br />
+            <span class="hero-highlight">YOUR RULES.</span>
+        </h1>
+
+        <p>
+            Manage your motorcycles, track every service,
+            and stay ahead of your next maintenance task.
+        </p>
+
+        <a asp-controller="Motorcycles"
+           asp-action="Index"
+           class="btn btn-primary">
+            Open My Garage <span aria-hidden="true">→</span>
+        </a>
+
+        <div class="hero-status">
+            <span class="status-dot"></span>
+            YOUR MOTORCYCLE MANAGEMENT SYSTEM
+        </div>
+    </div>
+
+    <div class="hero-visual">
+        <img src="~/images/MY27 KTM 790 DUKE_3.jpg"
+             alt="KTM 790 DUKE"
+             class="hero-motorcycle-image" />
+        <div class="hero-image-caption">BUILT FOR THE RIDE</div>
+    </div>
+</section>
+
+
+<section class="home-features">
+    <div class="features-heading">
+        <span>CONTROL CENTER / 01</span>
+        <h2>Your garage. One system.</h2>
+        <p>Everything you need to keep your motorcycles running.</p>
+    </div>
+
+    <div class="feature-grid">
+        <a asp-controller="Motorcycles"
+           asp-action="Index"
+           class="feature-card">
+            <div class="feature-card-top">
+                <span class="feature-number">01</span>
+                <span class="feature-arrow">↗</span>
+            </div>
+            <i class="bi bi-speedometer2 feature-icon"></i>
+            <h3>Motorcycles</h3>
+            <p>Manage your garage and motorcycle details.</p>
+            <span class="feature-link">OPEN GARAGE →</span>
+        </a>
+
+        <a asp-controller="ServiceRecords"
+           asp-action="Index"
+           class="feature-card">
+            <div class="feature-card-top">
+                <span class="feature-number">02</span>
+                <span class="feature-arrow">↗</span>
+            </div>
+            <i class="bi bi-wrench feature-icon"></i>
+            <h3>Service Records</h3>
+            <p>Keep track of services, repairs and costs.</p>
+            <span class="feature-link">VIEW HISTORY →</span>
+        </a>
+
+        <a asp-controller="MaintenanceTasks"
+           asp-action="Index"
+           class="feature-card">
+            <div class="feature-card-top">
+                <span class="feature-number">03</span>
+                <span class="feature-arrow">↗</span>
+            </div>
+            <i class="bi bi-calendar-check feature-icon"></i>
+            <h3>Maintenance</h3>
+            <p>Track upcoming maintenance and due dates.</p>
+            <span class="feature-link">VIEW TASKS →</span>
+        </a>
+
+        <a asp-controller="Messages"
+           asp-action="Index"
+           class="feature-card">
+            <div class="feature-card-top">
+                <span class="feature-number">04</span>
+                <span class="feature-arrow">↗</span>
+            </div>
+            <i class="bi bi-chat-dots feature-icon"></i>
+            <h3>Messages</h3>
+            <p>Review reminders and maintenance notifications.</p>
+            <span class="feature-link">VIEW MESSAGES →</span>
+        </a>
+    </div>
+</section>
+

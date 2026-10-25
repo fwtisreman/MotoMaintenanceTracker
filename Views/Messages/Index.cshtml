@@ -4,78 +4,78 @@
     ViewData["Title"] = "Messages";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1>Messages</h1>
-            <p class="text-muted">Notifications and maintenance reminders.</p>
-        </div>
-        <span class="badge bg-warning text-dark">
-            @Model.Count() active
-        </span>
+<div class="page-header">
+    <div>
+        <h1>Messages</h1>
+        <p style="color: #b8b8b8;">Notifications and maintenance reminders.</p>
     </div>
 
-    <form asp-action="DeleteAll" method="post"
-          onsubmit="return confirm('Are you sure you want to permanently delete ALL messages? This cannot be undone.');"
-          class="mb-3">
-        <button type="submit" class="btn btn-danger">
-            Delete All Messages
-        </button>
-    </form>
+    <span class="badge bg-warning text-dark">
+        @Model.Count() active
+    </span>
+</div>
 
-    @if (!Model.Any())
+<form asp-action="DeleteAll" method="post"
+      onsubmit="return confirm('Are you sure you want to permanently delete ALL messages? This cannot be undone.');"
+      class="mb-4">
+    <button type="submit" class="btn btn-outline-danger">
+        Delete All Messages
+    </button>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-dark">
+        <h5>No new messages</h5>
+        <p style="color: #b8b8b8;">Maintenance reminders and important notifications will appear here.</p>
+    </div>
+}
+else
+{
+    @foreach (var message in Model)
     {
-        <div class="alert alert-info">
-            <h5>No new messages</h5>
-            <p class="mb-0">Maintenance reminders and important notifications will appear here.</p>
-        </div>
-    }
-    else
-    {
-        @foreach (var message in Model)
-        {
-            <div class="card mb-3 shadow-sm @(message.IsDismissed ? "border-secondary" : "border-warning border-2")"
-                 style="@(message.IsDismissed ? "" : "background-color: #fff3cd;")">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <span class="badge bg-warning text-dark mb-2">
-                                @message.Type
-                            </span>
-                            <h5 class="card-title">@message.Title</h5>
-                            <p class="card-text">@message.Content</p>
-                            <small class="text-muted">
-                                @message.CreatedAt.ToString("dd MMM yyyy, HH:mm")
-                            </small>
-                        </div>
-                    </div>
+        <div class="card message-card mb-3 @(message.IsDismissed ? "border-secondary" : "")">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="badge bg-warning text-dark mb-2">
+                            @message.Type
+                        </span>
 
-                    <div class="d-flex gap-2 mt-3">
-                        <form asp-action="Dismiss" method="post">
-                            <input type="hidden" name="id" value="@message.Id" />
+                        <h5 class="card-title">@message.Title</h5>
+                        <p class="card-text">@message.Content</p>
 
-                            @if (!message.IsDismissed)
-                            {
-                                <button type="submit" class="btn btn-warning btn-sm">
-                                    Dismiss
-                                </button>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Dismissed</span>
-                            }
-                        </form>
-
-                        <form asp-action="Delete" method="post"
-                              onsubmit="return confirm('Permanently delete this message?');">
-                            <input type="hidden" name="id" value="@message.Id" />
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                Delete
-                            </button>
-                        </form>
+                        <small class="text-muted">
+                            @message.CreatedAt.ToString("dd MMM yyyy, HH:mm")
+                        </small>
                     </div>
                 </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <form asp-action="Dismiss" method="post">
+                        <input type="hidden" name="id" value="@message.Id" />
+
+                        @if (!message.IsDismissed)
+                        {
+                            <button type="submit" class="btn btn-warning btn-sm">
+                                Dismiss
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Dismissed</span>
+                        }
+                    </form>
+
+                    <form asp-action="Delete" method="post"
+                          onsubmit="return confirm('Permanently delete this message?');">
+                        <input type="hidden" name="id" value="@message.Id" />
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            Delete
+                        </button>
+                    </form>
+                </div>
             </div>
-        }
+        </div>
     }
-</div>
+}

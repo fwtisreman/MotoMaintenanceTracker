@@ -23,8 +23,8 @@
             asp-action="Dismiss"
             method="post">
         <input type="hidden" name="id" value="@reminder.Id" />
-        <input type="=hidden" name="returnUrl"
-            value="@Url.Action("Detais","MaintenanceTasks",new{id = Model.Id})"/>
+                <input type="hidden" name="returnUrl"
+                       value="@Url.Action("Details", "MaintenanceTasks", new { id = Model.Id })" />
          <button type="submit" class="btn btn-warning btn-sm">
                     Dismiss reminder
                 </button>
@@ -40,57 +40,52 @@
 
 <div>
     <hr />
+    
     <dl class="row">
-        <dt class="col-sm-2">
-            Motorcycle
-        </dt>
-        <dd class="col-sm-10">
+        <dt class="col-sm-3">Motorcycle</dt>
+        <dd class="col-sm-9">
             @(Model.Motorcycle != null
                 ? $"{Model.Motorcycle.Brand} {Model.Motorcycle.Model}"
                 : "No motorcycle assigned")
         </dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
+        <dt class="col-sm-3">Title</dt>
+        <dd class="col-sm-9">@Model.Title</dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class="col-sm-10">
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">
             @(string.IsNullOrWhiteSpace(Model.Description)
                 ? "—"
                 : Model.Description)
         </dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.DueDate)
-        </dt>
-        <dd class="col-sm-10">
+        <dt class="col-sm-3">Due Date</dt>
+        <dd class="col-sm-9">
             @(Model.DueDate.HasValue
                 ? Model.DueDate.Value.ToShortDateString()
                 : "Not scheduled")
         </dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.DueMileage)
-        </dt>
-        <dd class="col-sm-10">
+        <dt class="col-sm-3">Due Mileage</dt>
+        <dd class="col-sm-9">
             @(Model.DueMileage.HasValue
                 ? Model.DueMileage.Value.ToString("N0") + " km"
                 : "Not specified")
         </dd>
 
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.IsCompleted)
-        </dt>
-        <dd class="col-sm-10">
-            @(Model.IsCompleted ? "Completed" : "Pending")
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">
+            @if (Model.IsCompleted)
+            {
+                <span class="badge bg-success">Completed</span>
+            }
+            else
+            {
+                <span class="badge bg-warning text-dark">Pending</span>
+            }
         </dd>
     </dl>
+    
 </div>
 
 <div>

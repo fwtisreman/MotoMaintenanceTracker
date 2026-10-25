@@ -33,19 +33,35 @@
             </div>
             <div class="form-group">
                 <label asp-for="DueDate" class="control-label"></label>
-                <input asp-for="DueDate" class="form-control" />
+                <input asp-for="DueDate"
+                       class="form-control"
+                       type="date"
+                       min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                 <span asp-validation-for="DueDate" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="DueMileage" class="control-label"></label>
-                <input asp-for="DueMileage" class="form-control" />
+                <input asp-for="DueMileage"
+                       type="number"
+                       id="DueMileage"
+                       class="form-control" />
+
+                <small id="currentMileageInfo" class="text-warning">
+                    Select a motorcycle to see its current mileage.
+                </small>
+
                 <span asp-validation-for="DueMileage" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="IsCompleted" class="control-label"></label>
-                <input asp-for="IsCompleted" class="form-check-input" />
+
+            
+            <div class="form-check form-switch mb-3">
+                <input asp-for="IsCompleted" class="form-check-input" role="switch" />
+                <label asp-for="IsCompleted" class="form-check-label">
+                    Mark as completed
+                </label>
                 <span asp-validation-for="IsCompleted" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

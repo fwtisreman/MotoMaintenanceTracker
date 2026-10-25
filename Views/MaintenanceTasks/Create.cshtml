@@ -49,18 +49,22 @@
                            id="DueMileage"
                            class="form-control" />
 
-                    <small id="currentMileageInfo" class="text-muted">
+                    <small id="currentMileageInfo" class="text-warning">
                         Select a motorcycle to see its current mileage.
                     </small>
 
                     <span asp-validation-for="DueMileage" class="text-danger"></span>
                 </div>
 
-            <div class="form-group">
-                <label asp-for="IsCompleted" class="control-label"></label>
-                <input asp-for="IsCompleted" class="form-check-input" />
-                <span asp-validation-for="IsCompleted" class="text-danger"></span>
-            </div>
+                
+                <div class="form-check form-switch mb-3">
+                    <input asp-for="IsCompleted" class="form-check-input" role="switch" />
+                    <label asp-for="IsCompleted" class="form-check-label">
+                        Mark as completed
+                    </label>
+                    <span asp-validation-for="IsCompleted" class="text-danger"></span>
+                </div>
+
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>

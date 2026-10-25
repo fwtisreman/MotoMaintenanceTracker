@@ -4,54 +4,54 @@
     ViewData["Title"] = "Service Records";
 }
 
-<h1>Service Records</h1>
+<div class="page-header">
+    <div>
+        <h1>Service Records</h1>
+        <p style="color: #b8b8b8;">Keep track of maintenance and repairs for your motorcycles.</p>
+    </div>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">
-        Add Service Record
-    </a>
-</p>
+    <a asp-action="Create" class="btn btn-primary">Add Service Record</a>
+</div>
 
-<table class="table table-striped table-hover">
-    <thead>
-        <tr>
-            <th>Motorcycle</th>
-            <th>Service Type</th>
-            <th>Service Date</th>
-            <th>Mileage</th>
-            <th>Cost</th>
-            <th>Notes</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
+<div class="table-responsive">
+    <table class="table table-dark table-hover align-middle">
+        <thead>
             <tr>
-                <td>@(item.Motorcycle?.Model ?? "Unknown")</td>
-                <td>@item.ServiceType</td>
-                <td>@item.ServiceDate.ToShortDateString()</td>
-                <td>@item.Mileage.ToString("N0") km</td>
-                <td>@item.Cost.ToString("F2")</td>
-                <td>
-                    @(string.IsNullOrWhiteSpace(item.Notes)
-                        ? "—"
-                        : item.Notes)
-                </td>
-                <td>
-                    <a asp-action="Edit"
-                       asp-route-id="@item.Id"
-                       class="btn btn-sm btn-outline-primary">Edit</a>
-
-                    <a asp-action="Details"
-                       asp-route-id="@item.Id"
-                       class="btn btn-sm btn-outline-info">Details</a>
-
-                    <a asp-action="Delete"
-                       asp-route-id="@item.Id"
-                       class="btn btn-sm btn-outline-danger">Delete</a>
-                </td>
+                <th>Motorcycle</th>
+                <th>Service Type</th>
+                <th>Service Date</th>
+                <th>Mileage</th>
+                <th>Cost</th>
+                <th>Notes</th>
+                <th>Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@(item.Motorcycle?.Model ?? "Unknown")</td>
+                    <td>@item.ServiceType</td>
+                    <td>@item.ServiceDate.ToShortDateString()</td>
+                    <td>@item.Mileage.ToString("N0") km</td>
+                    <td>@item.Cost.ToString("F2")</td>
+                    <td>
+                        @(string.IsNullOrWhiteSpace(item.Notes) ? "—" : item.Notes)
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <a asp-action="Edit" asp-route-id="@item.Id"
+                               class="btn btn-sm btn-outline-primary">Edit</a>
+
+                            <a asp-action="Details" asp-route-id="@item.Id"
+                               class="btn btn-sm btn-outline-info">Details</a>
+
+                            <a asp-action="Delete" asp-route-id="@item.Id"
+                               class="btn btn-sm btn-outline-danger">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

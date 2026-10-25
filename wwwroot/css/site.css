@@ -495,3 +495,29 @@ a {
         flex-direction: column;
     }
 }
+
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(1);
+}
+
+
+
+/* Messages page */
+.message-card {
+    background-color: #202329;
+    color: #f1f1f1;
+    border: 1px solid #3b3f46;
+    border-left: 4px solid #ff8c00;
+    border-radius: 10px;
+}
+
+    .message-card .card-title {
+        color: #ff9f43;
+    }
+
+    .message-card .text-muted {
+        color: #b0b5bd !important;
+    }
+

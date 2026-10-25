@@ -1,4 +1,6 @@
-﻿@{
+﻿@inject MotoMaintenanceTracker.Data.ApplicationDbContext Db
+
+@{
     var current = ViewContext.RouteData.Values["controller"]?.ToString();
 }
 <!DOCTYPE html>
@@ -62,12 +64,24 @@
                                 Maintenance
                             </a>
                         </li>
+                       
                         <li class="nav-item">
                             <a class="nav-link @(current == "Messages" ? "active" : "")"
                                asp-controller="Messages" asp-action="Index">
                                 Messages
+                                @{
+                                    var activeMessages = Db.Messages.Count(m => !m.IsDismissed);
+                                }
+                                @if (activeMessages > 0)
+                                {
+                                    <span class="badge rounded-pill bg-warning text-dark ms-1">
+                                        @activeMessages
+                                    </span>
+                                }
                             </a>
                         </li>
+
+
                     </ul>
                 </div>
             </div>

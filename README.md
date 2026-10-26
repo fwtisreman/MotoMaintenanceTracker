@@ -2,152 +2,121 @@
 
 ## Overview
 
-Motorcycle Maintenance Tracker is an ASP.NET Core MVC web application designed to help motorcycle owners manage their motorcycles, record completed services, and track upcoming maintenance tasks.
+Motorcycle Maintenance Tracker is an ASP.NET Core MVC web application for motorcycle owners. It lets users register their motorcycles, record completed services, plan upcoming maintenance tasks and receive reminders when a task is about to be due.
 
-The application uses Entity Framework Core and SQL Server LocalDB to store and manage data.
+The project was created for the SoftUni ASP.NET Fundamentals course.
 
 ## Features
 
-- **Motorcycle management:** Create, view, edit, and delete motorcycle records.
-- **Service records:** Record maintenance work, including service type, date, mileage, cost, and notes.
-- **Maintenance tasks:** Create, view, edit, and delete maintenance reminders.
-- **Input validation:** Validate required fields, numeric ranges, string lengths, and service dates.
-- **Database relationships:** Associate service records with the corresponding motorcycle.
-- **Responsive interface:** Use Bootstrap styling and Razor views.
+- Home page: an overview with quick access to every section of the application.
+- Motorcycles: create, view, edit and delete motorcycles. Deleting is a soft delete: the record stays in the database but is hidden from the application.
+- Service records: create, view, edit and delete services (type, date, mileage, cost, notes). Each record belongs to a motorcycle.
+- Maintenance tasks: create, view, edit and delete planned tasks with an optional due date and due mileage.
+- Messages (reminders): reminders are generated automatically 7 days before, 1 day before and on the due date of a task. Messages can be dismissed or deleted.
+- Validation: server-side and client-side validation on all forms.
+- Responsive design: Bootstrap layout with a shared navigation bar and footer.
 
 ## Technologies
 
-- C#
-- .NET 10
-- ASP.NET Core MVC
-- Entity Framework Core
-- SQL Server LocalDB
-- Razor Views
-- Bootstrap
-- Data Annotations for validation
+- C# and .NET 10
+- ASP.NET Core MVC (Razor views)
+- Entity Framework Core with SQL Server (LocalDB)
+- Bootstrap 5 and Bootstrap Icons
+- jQuery Validation (client-side validation)
+- Git and GitHub
+
+## Entity models
+
+- Motorcycle: brand, model, year, mileage and a flag that marks it as deleted. One motorcycle has many service records.
+- ServiceRecord: service type, date, mileage, cost and notes. Belongs to one motorcycle.
+- MaintenanceTask: title, description, due date, due mileage, completion status and reminder flags. Linked to a motorcycle.
+- Message: a reminder with a title, content, type and read/dismissed state. Linked to a maintenance task.
+
+## Architecture
+
+- MVC: models describe the data, controllers handle requests, and Razor views display the result.
+- Dependency injection: ApplicationDbContext is registered in Program.cs and injected into each controller through its constructor.
+- Layout, partial views and sections: every page uses the shared layout (Views/Shared/_Layout.cshtml). Forms add their validation scripts through a Scripts section and the _ValidationScriptsPartial partial view.
 
 ## Prerequisites
 
-Install the following before running the application:
+- .NET 10 SDK (https://dotnet.microsoft.com/download)
+- SQL Server LocalDB (installed with Visual Studio, or with SQL Server Express)
+- The EF Core command-line tool, installed with this command:
 
-- .NET 10 SDK
-- SQL Server Express LocalDB
-- Git (optional, for cloning the repository)
+    dotnet tool install --global dotnet-ef
 
-The Entity Framework Core command-line tool is required to apply migrations if it is not already installed.
+If it is already installed, skip this step.
 
-Install it globally using:
-
-```powershell
-dotnet tool install --global dotnet-ef
-```
-
-If it is already installed, update it when necessary instead of installing it again.
-
-## Getting Started
+## Setup
 
 ### 1. Clone the repository
 
-```powershell
-git clone https://github.com/fwtisreman/MotoMaintenanceTracker.git
-cd MotoMaintenanceTracker
-```
+    git clone https://github.com/fwtisreman/MotoMaintenanceTracker.git
+    cd MotoMaintenanceTracker
 
-Open a terminal in the directory containing `MotoMaintenanceTracker.csproj`.
+The folder you land in contains MotoMaintenanceTracker.csproj. Run all following commands from this folder.
 
-### 2. Restore dependencies
+### 2. Restore the packages
 
-```powershell
-dotnet restore
-```
+    dotnet restore
 
-### 3. Configure the database
+### 3. Check the connection string
 
-The default connection string is configured in `appsettings.json` and uses SQL Server LocalDB:
+The connection string is in appsettings.json, in the section ConnectionStrings, under the name DefaultConnection:
 
-```text
-Server=(localdb)\MSSQLLocalDB;Database=MotoMaintenanceTrackerDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True
-```
+    Server=(localdb)\MSSQLLocalDB;Database=MotoMaintenanceTrackerDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True
 
-Ensure SQL Server LocalDB is installed and available on your machine. If necessary, update the connection string for your local SQL Server instance.
+It uses Windows authentication on LocalDB, so no username, password or environment variable is needed.
 
-### 4. Apply database migrations
+If you use a different SQL Server instance, change the Server part of the connection string, or override the setting with an environment variable (PowerShell):
 
-```powershell
-dotnet ef database update
-```
+    $env:ConnectionStrings__DefaultConnection = "Server=YOUR_SERVER;Database=MotoMaintenanceTrackerDb;Trusted_Connection=True;TrustServerCertificate=True"
 
-This creates or updates the database schema using the existing Entity Framework Core migrations.
+### 4. Create the database
 
-### 5. Build the application
+    dotnet ef database update
 
-```powershell
-dotnet build
-```
+This applies the existing migrations and creates the database. In Visual Studio you can run Update-Database in the Package Manager Console instead.
 
-### 6. Run the application
+### 5. Run the application
 
-```powershell
-dotnet run
-```
+    dotnet run
 
-Open the local URL displayed in the terminal.
+Open the HTTPS address shown in the terminal. The database starts empty, so add a motorcycle first, then add service records and maintenance tasks for it.
 
-## Database Structure
-
-The application contains three main entity models:
-
-- **Motorcycle:** Stores the motorcycle's brand, model, year, and mileage.
-- **ServiceRecord:** Stores service type, service date, mileage, cost, and optional notes. Each service record belongs to a motorcycle.
-- **MaintenanceTask:** Stores maintenance task details, optional due dates and mileage, and completion status.
-
-Entity Framework Core manages database access and schema migrations. The application uses dependency injection to provide the database context to its controllers.
+Note: Bootstrap Icons are loaded from a CDN, so an internet connection is needed to see the icons on the home page.
 
 ## Validation
 
-Server-side validation uses model validation attributes and custom validation logic.
+Server-side rules are defined with data annotations on the models (Required, StringLength, Range) and with extra checks in the controllers:
 
-Examples include:
+- Service dates cannot be in the future.
+- Maintenance due dates cannot be in the past.
+- A due mileage cannot be lower than the motorcycle's current mileage.
+- A service record or task must belong to an existing motorcycle that has not been deleted.
 
-- Required fields for essential information.
-- String length restrictions.
-- Valid ranges for years, mileage, and service costs.
-- Prevention of future service dates.
-- Validation feedback displayed in the Razor views.
+Client-side validation uses jQuery Validation and the unobtrusive validation scripts, so most errors appear before the form is submitted. Forms also use the anti-forgery token, and controllers accept only the expected fields from each form.
 
-Client-side validation is supported through the ASP.NET Core validation scripts included in the application.
+## Project structure
 
-## Configuration and Security
+    MotoMaintenanceTracker/
+    |-- Controllers/     Home, Motorcycles, ServiceRecords, MaintenanceTasks, Messages
+    |-- Data/            ApplicationDbContext
+    |-- Migrations/      EF Core migrations
+    |-- Models/          Entity models
+    |-- Views/           Razor views, shared layout and partial views
+    |-- wwwroot/         CSS, JavaScript, images and libraries
+    |-- appsettings.json
+    |-- Program.cs
+    |-- MotoMaintenanceTracker.csproj
 
-The database connection string is stored in `appsettings.json` for local development.
+## Configuration and security
 
-The default configuration uses Windows authentication through SQL Server LocalDB and does not require a separate database username or password.
+- No secrets are stored in the repository.
+- The default configuration needs no credentials, because it uses Windows authentication on LocalDB.
+- For other environments, set the connection string through an environment variable or user secrets instead of committing it.
 
-For other environments, configure the appropriate connection string through the standard ASP.NET Core configuration system or environment variables. Do not commit passwords, access tokens, or other secrets to the repository.
+## AI assistance
 
-
-## Project Structure
-
-The project file is located in the innermost `MotoMaintenanceTracker` directory.
-
-```text
-MotoMaintenanceTracker/                 # Repository root (example)
-└── MotoMaintenanceTracker/
-    └── MotoMaintenanceTracker/
-        ├── Controllers/
-        ├── Data/
-        ├── Migrations/
-        ├── Models/
-        ├── Views/
-        ├── wwwroot/
-        ├── appsettings.json
-        ├── Program.cs
-        └── MotoMaintenanceTracker.csproj
-```
-
-Run the `dotnet` commands from the directory containing `MotoMaintenanceTracker.csproj`.
-
-
-## License
-
-This project was created for educational purposes as part of the SoftUni ASP.NET Fundamentals course.
+An AI assistant (Claude) was used during development for guidance, explanations, debugging, code review and help with the home page styling.

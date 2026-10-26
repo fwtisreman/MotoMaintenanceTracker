@@ -1,222 +1,212 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using MotoMaintenanceTracker.Models;
 using MotoMaintenanceTracker.Data;
+using MotoMaintenanceTracker.Models;
 
-public class MaintenanceTasksController : Controller
+namespace MotoMaintenanceTracker.Controllers
 {
-    private readonly ApplicationDbContext _context;
-
-    public MaintenanceTasksController(ApplicationDbContext context)
+    public class MaintenanceTasksController : Controller
     {
-        _context = context;
-    }
+        private readonly ApplicationDbContext _context;
 
-    public async Task<IActionResult> Index()
-    {
-        var tasks = await _context.MaintenanceTasks
-            .Include(t => t.Motorcycle)
-            .ToListAsync();
-
-        return View(tasks);
-    }
-
-    public async Task<IActionResult> Details(int? id)
-    {
-        if (id == null)
-            return NotFound();
-
-        var task = await _context.MaintenanceTasks
-            .Include(t => t.Motorcycle)
-            .FirstOrDefaultAsync(t => t.Id == id);
-
-        if (task == null)
-            return NotFound();
-
-
-        var reminder = await _context.Messages
-            .FirstOrDefaultAsync(m => m.MaintenanceTaskId == task.Id);
-
-        ViewData["MaintenanceReminder"] = reminder;
-
-
-        return View(task);
-    }
-
-    public IActionResult Create()
-    {
-        LoadMotorcycles();
-        return View();
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(
-        [Bind("Id,MotorcycleId,Title,Description,DueDate,DueMileage,IsCompleted")]
-        MaintenanceTask maintenanceTask)
-    {
-        await ValidateScheduleAsync(maintenanceTask);
-        if (ModelState.IsValid)
+        public MaintenanceTasksController(ApplicationDbContext context)
         {
-            var motorcycleExists = await _context.Motorcycles
-                .AnyAsync(m => m.Id == maintenanceTask.MotorcycleId
-                            && !m.IsDeleted);
-
-            if (motorcycleExists)
-            {
-                _context.MaintenanceTasks.Add(maintenanceTask);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-
-            ModelState.AddModelError(
-                nameof(maintenanceTask.MotorcycleId),
-                "Please select an active motorcycle.");
+            _context = context;
         }
 
-        LoadMotorcycles(maintenanceTask.MotorcycleId);
-        return View(maintenanceTask);
-    }
-
-    public async Task<IActionResult> Edit(int? id)
-    {
-        if (id == null)
-            return NotFound();
-
-        var task = await _context.MaintenanceTasks.FindAsync(id);
-
-        if (task == null)
-            return NotFound();
-
-        LoadMotorcycles(task.MotorcycleId);
-        return View(task);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(
-        int? id,
-        [Bind("Id,MotorcycleId,Title,Description,DueDate,DueMileage,IsCompleted")]
-        MaintenanceTask maintenanceTask)
-    {
-        if (id != maintenanceTask.Id)
-            return NotFound();
-        await ValidateScheduleAsync(maintenanceTask);
-        if (ModelState.IsValid)
+        // Shows all tasks, except those of deleted motorcycles
+        public async Task<IActionResult> Index()
         {
-            var motorcycleExists = await _context.Motorcycles
-                .AnyAsync(m => m.Id == maintenanceTask.MotorcycleId
-                            && !m.IsDeleted);
+            var tasks = await _context.MaintenanceTasks
+                .Include(t => t.Motorcycle)
+                .Where(t => t.Motorcycle == null || !t.Motorcycle.IsDeleted)
+                .ToListAsync();
 
-            if (motorcycleExists)
-            {
-                try
-                {
-                    _context.Update(maintenanceTask);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!MaintenanceTaskExists(maintenanceTask.Id))
-                        return NotFound();
-
-                    throw;
-                }
-            }
-
-            ModelState.AddModelError(
-                nameof(maintenanceTask.MotorcycleId),
-                "Please select an active motorcycle.");
+            return View(tasks);
         }
 
-        LoadMotorcycles(maintenanceTask.MotorcycleId);
-        return View(maintenanceTask);
-    }
-
-    public async Task<IActionResult> Delete(int? id)
-    {
-        if (id == null)
-            return NotFound();
-
-        var task = await _context.MaintenanceTasks
-            .Include(t => t.Motorcycle)
-            .FirstOrDefaultAsync(t => t.Id == id);
-
-        if (task == null)
-            return NotFound();
-
-        return View(task);
-    }
-
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? id)
-    {
-        var task = await _context.MaintenanceTasks.FindAsync(id);
-
-        if (task != null)
+        public async Task<IActionResult> Details(int? id)
         {
-            _context.MaintenanceTasks.Remove(task);
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var task = await _context.MaintenanceTasks
+                .Include(t => t.Motorcycle)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (task == null)
+            {
+                return NotFound();
+            }
+
+            // The view shows the reminder message for this task, if there is one
+            ViewData["MaintenanceReminder"] = await _context.Messages
+                .FirstOrDefaultAsync(m => m.MaintenanceTaskId == task.Id);
+
+            return View(task);
+        }
+
+        public async Task<IActionResult> Create()
+        {
+            await LoadMotorcyclesAsync();
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            [Bind("MotorcycleId,Title,Description,DueDate,DueMileage,IsCompleted")] MaintenanceTask task)
+        {
+            await ValidateTaskAsync(task);
+
+            if (!ModelState.IsValid)
+            {
+                await LoadMotorcyclesAsync(task.MotorcycleId);
+                return View(task);
+            }
+
+            _context.MaintenanceTasks.Add(task);
             await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
-        return RedirectToAction(nameof(Index));
-    }
-
-    private void LoadMotorcycles(int? selectedId = null)
-    {
-        var motorcycles = _context.Motorcycles
-            .Where(m => !m.IsDeleted)
-            .Select(m => new
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
             {
-                m.Id,
-                DisplayName = m.Brand + " " + m.Model,
-                m.Mileage
-            })
-            .ToList();
+                return NotFound();
+            }
 
-        ViewData["MotorcycleId"] = new SelectList(
-            motorcycles,
-            "Id",
-            "DisplayName",
-            selectedId);
+            var task = await _context.MaintenanceTasks.FindAsync(id);
+            if (task == null)
+            {
+                return NotFound();
+            }
 
-        ViewData["MotorcycleMileages"] = motorcycles.ToDictionary(
-            m => m.Id,
-            m => m.Mileage);
-    }
-
-    private bool MaintenanceTaskExists(int id)
-    {
-        return _context.MaintenanceTasks.Any(t => t.Id == id);
-
-    }
-
-    private async Task ValidateScheduleAsync(MaintenanceTask task)
-    {
-        if (task.DueDate.HasValue &&
-            task.DueDate.Value.Date < DateTime.Today)
-        {
-            ModelState.AddModelError(
-                nameof(task.DueDate),
-                "Due date cannot be in the past.");
+            await LoadMotorcyclesAsync(task.MotorcycleId);
+            return View(task);
         }
 
-        if (task.DueMileage.HasValue)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id,
+            [Bind("Id,MotorcycleId,Title,Description,DueDate,DueMileage,IsCompleted")] MaintenanceTask task)
         {
+            if (id != task.Id)
+            {
+                return NotFound();
+            }
+
+            await ValidateTaskAsync(task);
+
+            if (!ModelState.IsValid)
+            {
+                await LoadMotorcyclesAsync(task.MotorcycleId);
+                return View(task);
+            }
+
+            var existing = await _context.MaintenanceTasks.FindAsync(id);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            // If the due date changes, the reminders must be able to fire again
+            if (existing.DueDate != task.DueDate)
+            {
+                existing.SevenDayReminderSent = false;
+                existing.OneDayReminderSent = false;
+                existing.DueDateReminderSent = false;
+            }
+
+            // Copy only the fields the user can edit
+            existing.MotorcycleId = task.MotorcycleId;
+            existing.Title = task.Title;
+            existing.Description = task.Description;
+            existing.DueDate = task.DueDate;
+            existing.DueMileage = task.DueMileage;
+            existing.IsCompleted = task.IsCompleted;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var task = await _context.MaintenanceTasks
+                .Include(t => t.Motorcycle)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (task == null)
+            {
+                return NotFound();
+            }
+
+            return View(task);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var task = await _context.MaintenanceTasks.FindAsync(id);
+
+            if (task != null)
+            {
+                _context.MaintenanceTasks.Remove(task);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Fills the motorcycle dropdown, and the mileages the form uses
+        private async Task LoadMotorcyclesAsync(int? selectedId = null)
+        {
+            var motorcycles = await _context.Motorcycles
+                .Where(m => !m.IsDeleted)
+                .Select(m => new
+                {
+                    m.Id,
+                    DisplayName = m.Brand + " " + m.Model,
+                    m.Mileage
+                })
+                .ToListAsync();
+
+            ViewData["MotorcycleId"] = new SelectList(motorcycles, "Id", "DisplayName", selectedId);
+            ViewData["MotorcycleMileages"] = motorcycles.ToDictionary(m => m.Id, m => m.Mileage);
+        }
+
+        // Checks the rules that data annotations can't express
+        private async Task ValidateTaskAsync(MaintenanceTask task)
+        {
+            if (task.DueDate.HasValue && task.DueDate.Value.Date < DateTime.Today)
+            {
+                ModelState.AddModelError(nameof(task.DueDate),
+                    "Due date cannot be in the past.");
+            }
+
             var motorcycle = await _context.Motorcycles
-                .FirstOrDefaultAsync(m =>
-                    m.Id == task.MotorcycleId &&
-                    !m.IsDeleted);
+                .FirstOrDefaultAsync(m => m.Id == task.MotorcycleId && !m.IsDeleted);
 
-            if (motorcycle != null &&
-                task.DueMileage.Value < motorcycle.Mileage)
+            if (motorcycle == null)
             {
-                ModelState.AddModelError(
-                    nameof(task.DueMileage),
+                ModelState.AddModelError(nameof(task.MotorcycleId),
+                    "Please select an active motorcycle.");
+            }
+            else if (task.DueMileage.HasValue && task.DueMileage.Value < motorcycle.Mileage)
+            {
+                ModelState.AddModelError(nameof(task.DueMileage),
                     $"Due mileage cannot be lower than the current mileage ({motorcycle.Mileage:N0} km).");
             }
         }

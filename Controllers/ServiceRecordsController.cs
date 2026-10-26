@@ -1,216 +1,189 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MotoMaintenanceTracker.Data;
 using MotoMaintenanceTracker.Models;
 
-public class ServiceRecordsController : Controller
+namespace MotoMaintenanceTracker.Controllers
 {
-    private readonly ApplicationDbContext _context;
-
-    public ServiceRecordsController(ApplicationDbContext context)
+    public class ServiceRecordsController : Controller
     {
-        _context = context;
-    }
+        private readonly ApplicationDbContext _context;
 
-    // GET: SERVICERECORDS
-    public async Task<IActionResult> Index()
-    {
-        var serviceRecords = await _context.ServiceRecords
-            .Include(s => s.Motorcycle)
-            .ToListAsync();
-
-        return View(serviceRecords);
-    }
-    // GET: SERVICERECORDS/Details/5
-    public async Task<IActionResult> Details(int? id)
-    {
-        if (id == null)
+        public ServiceRecordsController(ApplicationDbContext context)
         {
-            return NotFound();
+            _context = context;
         }
 
-        var servicerecord = await _context.ServiceRecords
-            .Include(s => s.Motorcycle)
-            .FirstOrDefaultAsync(m => m.Id == id);
-        if (servicerecord == null)
+        public async Task<IActionResult> Index()
         {
-            return NotFound();
+            var records = await _context.ServiceRecords
+                .Include(s => s.Motorcycle)
+                .ToListAsync();
+
+            return View(records);
         }
 
-        return View(servicerecord);
-    }
-
-    // GET: SERVICERECORDS/Create
-    public IActionResult Create()
-    {
-        ViewData["MotorcycleId"] = new SelectList(
-           _context.Motorcycles.Where(m => !m.IsDeleted),
-           "Id",
-           "Model"
-                  );
-
-        return View();
-    }
-
-    //// POST: SERVICERECORDS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(
-        [Bind("Id,MotorcycleId,ServiceType,ServiceDate,Mileage,Cost,Notes")]
-        ServiceRecord servicerecord)
-    {
-        if (ModelState.IsValid)
+        public async Task<IActionResult> Details(int? id)
         {
-            var motorcycle = await _context.Motorcycles
-                .FirstOrDefaultAsync(m =>
-                    m.Id == servicerecord.MotorcycleId &&
-                    !m.IsDeleted);
-
-            if (motorcycle == null)
+            if (id == null)
             {
-                ModelState.AddModelError(
-                    nameof(servicerecord.MotorcycleId),
+                return NotFound();
+            }
+
+            var record = await _context.ServiceRecords
+                .Include(s => s.Motorcycle)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (record == null)
+            {
+                return NotFound();
+            }
+
+            return View(record);
+        }
+
+        public async Task<IActionResult> Create()
+        {
+            await LoadMotorcyclesAsync();
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            [Bind("MotorcycleId,ServiceType,ServiceDate,Mileage,Cost,Notes")] ServiceRecord serviceRecord)
+        {
+            await ValidateRecordAsync(serviceRecord);
+
+            if (!ModelState.IsValid)
+            {
+                await LoadMotorcyclesAsync(serviceRecord.MotorcycleId);
+                return View(serviceRecord);
+            }
+
+            _context.ServiceRecords.Add(serviceRecord);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var record = await _context.ServiceRecords.FindAsync(id);
+            if (record == null)
+            {
+                return NotFound();
+            }
+
+            await LoadMotorcyclesAsync(record.MotorcycleId);
+            return View(record);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id,
+            [Bind("Id,MotorcycleId,ServiceType,ServiceDate,Mileage,Cost,Notes")] ServiceRecord serviceRecord)
+        {
+            if (id != serviceRecord.Id)
+            {
+                return NotFound();
+            }
+
+            await ValidateRecordAsync(serviceRecord);
+
+            if (!ModelState.IsValid)
+            {
+                await LoadMotorcyclesAsync(serviceRecord.MotorcycleId);
+                return View(serviceRecord);
+            }
+
+            var existing = await _context.ServiceRecords.FindAsync(id);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            // Copy the edited values onto the record loaded from the database
+            existing.MotorcycleId = serviceRecord.MotorcycleId;
+            existing.ServiceType = serviceRecord.ServiceType;
+            existing.ServiceDate = serviceRecord.ServiceDate;
+            existing.Mileage = serviceRecord.Mileage;
+            existing.Cost = serviceRecord.Cost;
+            existing.Notes = serviceRecord.Notes;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var record = await _context.ServiceRecords
+                .Include(s => s.Motorcycle)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (record == null)
+            {
+                return NotFound();
+            }
+
+            return View(record);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var record = await _context.ServiceRecords.FindAsync(id);
+
+            if (record != null)
+            {
+                _context.ServiceRecords.Remove(record);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Fills the motorcycle dropdown with motorcycles that are not deleted
+        private async Task LoadMotorcyclesAsync(int? selectedId = null)
+        {
+            var motorcycles = await _context.Motorcycles
+                .Where(m => !m.IsDeleted)
+                .Select(m => new { m.Id, Name = m.Brand + " " + m.Model })
+                .ToListAsync();
+
+            ViewData["MotorcycleId"] = new SelectList(motorcycles, "Id", "Name", selectedId);
+        }
+
+        // Checks the rules that data annotations can't express
+        private async Task ValidateRecordAsync(ServiceRecord record)
+        {
+            if (record.ServiceDate.Date > DateTime.Today)
+            {
+                ModelState.AddModelError(nameof(record.ServiceDate),
+                    "Service date cannot be in the future.");
+            }
+
+            var motorcycleExists = await _context.Motorcycles
+                .AnyAsync(m => m.Id == record.MotorcycleId && !m.IsDeleted);
+
+            if (!motorcycleExists)
+            {
+                ModelState.AddModelError(nameof(record.MotorcycleId),
                     "Please select a valid motorcycle.");
             }
-            else
-            {
-                _context.ServiceRecords.Add(servicerecord);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
         }
-
-        ViewData["MotorcycleId"] = new SelectList(
-           _context.Motorcycles.Where(m => !m.IsDeleted),
-           "Id",
-           "Model",
-           servicerecord.MotorcycleId);
-
-        return View(servicerecord);
-    }
-
-    // GET: SERVICERECORDS/Edit/5
-
-    public async Task<IActionResult> Edit(int? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        var servicerecord = await _context.ServiceRecords.FindAsync(id);
-
-        if (servicerecord == null)
-        {
-            return NotFound();
-        }
-
-        ViewData["MotorcycleId"] = new SelectList(
-           _context.Motorcycles.Where(m => !m.IsDeleted),
-           "Id",
-           "Model",
-           servicerecord.MotorcycleId);
-
-        return View(servicerecord);
-    }
-
-
-    // POST: SERVICERECORDS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("Id,MotorcycleId,Motorcycle,ServiceType,ServiceDate,Mileage,Cost,Notes")] ServiceRecord servicerecord)
-    {
-        if (id != servicerecord.Id)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            var motorcycle = await _context.Motorcycles
-                .FirstOrDefaultAsync(m => m.Id == servicerecord.MotorcycleId);
-
-            if (motorcycle == null)
-            {
-                ModelState.AddModelError(
-                    nameof(servicerecord.MotorcycleId),
-                    "Please select a valid motorcycle");
-            }
-            
-            else
-            {
-                try
-                {
-                    _context.Update(servicerecord);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                catch(DbUpdateConcurrencyException)
-                {
-                    if(!ServiceRecordExists(servicerecord.Id))
-                    {
-                        return NotFound();
-                    }
-                    throw;
-                }
-            }
-        }
-
-        ViewData["MotorcycleId"] = new SelectList(
-           _context.Motorcycles.Where(m => !m.IsDeleted),
-           "Id",
-           "Model",
-           servicerecord.MotorcycleId);
-
-        return View(servicerecord);
-    }
-
-    // GET: SERVICERECORDS/Delete/5
-
-    public async Task<IActionResult> Delete(int? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        var servicerecord = await _context.ServiceRecords
-            .Include(s => s.Motorcycle)
-            .FirstOrDefaultAsync(m => m.Id == id);
-
-        if (servicerecord == null)
-        {
-            return NotFound();
-        }
-
-        return View(servicerecord);
-    }
-
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
-        var servicerecord = await _context.ServiceRecords
-            .FindAsync(id);
-
-        if (servicerecord != null)
-        {
-            _context.ServiceRecords.Remove(servicerecord);
-            await _context.SaveChangesAsync();
-        }
-
-        return RedirectToAction(nameof(Index));
-    }
-
-
-    private bool ServiceRecordExists(int? id)
-    {
-        return _context.ServiceRecords.Any(e => e.Id == id);
     }
 }

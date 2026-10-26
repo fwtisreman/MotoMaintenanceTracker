@@ -55,7 +55,7 @@ If it is already installed, skip this step.
     git clone https://github.com/fwtisreman/MotoMaintenanceTracker.git
     cd MotoMaintenanceTracker
 
-The folder you land in contains MotoMaintenanceTracker.csproj. Run all following commands from this folder.
+Run the following commands from the directory containing MotoMaintenanceTracker.csproj.
 
 ### 2. Restore the packages
 
